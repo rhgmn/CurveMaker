@@ -56,19 +56,19 @@ class CurveMakerWidget:
     ## For debugging
     ##
     ## Reload and Test area
-    #reloadCollapsibleButton = ctk.ctkCollapsibleButton()
-    #reloadCollapsibleButton.text = "Reload && Test"
-    #self.layout.addWidget(reloadCollapsibleButton)
-    #reloadFormLayout = qt.QFormLayout(reloadCollapsibleButton)
-    #
+    reloadCollapsibleButton = ctk.ctkCollapsibleButton()
+    reloadCollapsibleButton.text = "Reload && Test"
+    self.layout.addWidget(reloadCollapsibleButton)
+    reloadFormLayout = qt.QFormLayout(reloadCollapsibleButton)
+ 
     ## reload button
     ## (use this during development, but remove it when delivering
     ##  your module to users)
-    #self.reloadButton = qt.QPushButton("Reload")
-    #self.reloadButton.toolTip = "Reload this module."
-    #self.reloadButton.name = "CurveMaker Reload"
-    #reloadFormLayout.addWidget(self.reloadButton)
-    #self.reloadButton.connect('clicked()', self.onReload)
+    self.reloadButton = qt.QPushButton("Reload")
+    self.reloadButton.toolTip = "Reload this module."
+    self.reloadButton.name = "CurveMaker Reload"
+    reloadFormLayout.addWidget(self.reloadButton)
+    self.reloadButton.connect('clicked()', self.onReload)
     ##
     #####################
 
@@ -147,7 +147,7 @@ class CurveMakerWidget:
     #
     self.InterpResolutionSliderWidget = ctk.ctkSliderWidget()
     self.InterpResolutionSliderWidget.singleStep = 1.0
-    self.InterpResolutionSliderWidget.minimum = 5.0
+    self.InterpResolutionSliderWidget.minimum = 3.0
     self.InterpResolutionSliderWidget.maximum = 50.0
     self.InterpResolutionSliderWidget.value = 25.0
     self.InterpResolutionSliderWidget.setToolTip("Number of interpolation points between control points. Default is 25.")
@@ -793,7 +793,8 @@ class CurveMakerLogic:
     
     # Interpolate x, y and z by using the three spline filters and
     # create new points
-    nInterpolatedPoints = (self.interpResolution+2)*(nOfControlPoints-1) # One section is devided into self.interpResolution segments
+    nInterpolatedPoints = (self.interpResolution+2)*(nOfControlPoints-1)
+    # One section is devided into self.interpResolution segments
     points = vtk.vtkPoints()
     r = [0.0, 0.0]
     aSplineX.GetParametricRange(r)
@@ -818,12 +819,12 @@ class CurveMakerLogic:
         t = t + tStep
         p = p + 1
       nOutputPoints = p
-    
+
     lines = vtk.vtkCellArray()
     lines.InsertNextCell(nOutputPoints)
     for i in range(0, nOutputPoints):
       lines.InsertCellPoint(i)
-        
+
     outputPoly.SetPoints(points)
     outputPoly.SetLines(lines)
 
@@ -991,19 +992,19 @@ class CurveMakerLogic:
             self.nodeToPoly(self.SourceNode, self.CurvePoly, False)
         
         elif self.InterpolationMethod == 1: # Cardinal Spline
-        
+
           if self.RingMode > 0:
             self.nodeToPolyCardinalSpline(self.SourceNode, self.CurvePoly, True)
           else:
             self.nodeToPolyCardinalSpline(self.SourceNode, self.CurvePoly, False)
-        
+
         elif self.InterpolationMethod == 2: # Hermite Spline
         
           if self.RingMode > 0:        
             self.nodeToPolyHermiteSpline(self.SourceNode, self.CurvePoly, True)
           else:
             self.nodeToPolyHermiteSpline(self.SourceNode, self.CurvePoly, False)
-          
+
         self.CurveLength = self.calculateLineLength(self.CurvePoly)
 
       tubeFilter = vtk.vtkTubeFilter()
@@ -1020,14 +1021,15 @@ class CurveMakerLogic:
         self.curvatureMeanKappa = None
         self.curvatureMinKappa = None
         self.curvatureMaxKappa = None
-       
+
       tubeFilter.SetInputData(self.CurvePoly)
       tubeFilter.SetRadius(self.TubeRadius)
       tubeFilter.SetNumberOfSides(20)
       tubeFilter.CappingOn()
       tubeFilter.Update()
 
-      self.DestinationNode.SetAndObservePolyData(tubeFilter.GetOutput())
+      # self.DestinationNode.SetAndObservePolyData(tubeFilter.GetOutput())
+      self.DestinationNode.SetAndObservePolyData(self.CurvePoly)
       self.DestinationNode.Modified()
       
       if self.DestinationNode.GetScene() == None:
